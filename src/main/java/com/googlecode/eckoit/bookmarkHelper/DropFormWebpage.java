@@ -1,0 +1,474 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/*
+ * DropFormWebpage.java
+ *
+ * Created on Sep 2, 2010, 11:18:07 AM
+ */
+
+package com.googlecode.eckoit.bookmarkHelper;
+
+import com.googlecode.eckoit.Slugger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JDialog;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import org.apache.commons.lang.StringUtils;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
+import org.ektorp.CouchDbConnector;
+import org.ektorp.CouchDbInstance;
+import org.ektorp.ViewQuery;
+import org.ektorp.impl.StdCouchDbConnector;
+import org.htmlparser.NodeFilter;
+import org.htmlparser.Parser;
+import org.htmlparser.filters.TagNameFilter;
+import org.joda.time.DateTime;
+
+/**
+ *
+ * @author ryan
+ */
+public class DropFormWebpage extends javax.swing.JPanel {
+
+
+    BookmarkDropTargetWindow window;
+    JDialog container;
+    private CouchDbInstance dbInstance;
+    private List<String> spaces;
+    private String lastTopicID;
+    private String lastSpaceID;
+    private CouchDbConnector wikiConnector;
+
+    /** Creates new form DropFormWebpage */
+    public DropFormWebpage() {
+        initComponents();
+    }
+
+    public void setSpaces(List<String> spaces) {
+        this.spaces = spaces;
+        Vector<String> spaceVector = new Vector<String>(spaces);
+        spaceComboBox.setModel(new javax.swing.DefaultComboBoxModel(spaceVector));
+        if (lastSpaceID == null) {
+            lastSpaceID = (String)spaceComboBox.getItemAt(0);
+        }
+        spaceComboBox.setSelectedItem(lastSpaceID);
+        spaceComboBoxActionPerformed(null);
+    }
+
+    public void setBookmarkDropTargetWindow(BookmarkDropTargetWindow window) {
+        this.window = window;
+    }
+
+    public void setDBInstance(  CouchDbInstance dbInstance) {
+        this.dbInstance = dbInstance;
+    }
+
+    protected JTextField getDescriptionField() {
+        return descTextField;
+    }
+
+    public void setWebsiteAddress(final String address) {
+        this.siteAddressTextField.setText(address);
+        siteAddressTextField.setCaretPosition(0);
+        final String label = getLabelForSite(address);
+
+
+
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                siteIconLabel.setText(label);
+                
+                descTextField.setText(getTitleForSite(address));
+                newTopicTextField.setText("");
+                topicTextArea.setText("");
+                if (lastTopicID != null) {
+                    addLinkRadioButtonActionPerformed(null);
+                    spaceComboBoxActionPerformed(null);
+                    addLinkRadioButton.setSelected(true);
+                    
+                    descTextField.requestFocus();
+                    List<String> topics = getTopics();
+                    setTopicsAvailable(topics);
+                    topicComboBox.setSelectedItem(lastTopicID);
+                }
+            }
+        });
+
+    }
+
+
+    protected void setTopicsAvailable(List<String> topics) {
+        Vector<String> topicVector = new Vector<String>(topics);
+        topicComboBox.setModel(new javax.swing.DefaultComboBoxModel(topicVector));
+    }
+
+
+
+    protected String getLabelForSite(String address) {
+        return "<html>\n  <head>\n\n  </head>\n  <body>\n    <p style=\"margin-top: 0\">\n      \n  <img src=\"http://www.bitpixels.com/getthumbnail?code=471532&url=" + address +  "\" />\n    </p>\n  </body>\n</html>\n";
+    }
+
+
+    protected String getTitleForSite(String address) {
+        try {
+            //HttpClient httpclient = new DefaultHttpClient();
+            //HttpGet httpget = new HttpGet(address);
+            Parser parser = new Parser(address);
+            NodeFilter filter = new TagNameFilter("TITLE");
+
+            return parser.parse(filter).asString().trim();
+        } catch (Exception ex) {
+            Logger.getLogger(DropFormWebpage.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return "";
+
+    }
+
+    protected List<String> getTopics() {
+        List<String> list = new ArrayList<String>();
+        ViewQuery query = new ViewQuery().designDocId("_design/app").viewName("topics");
+        List<JsonNode> results = wikiConnector.queryView(query, JsonNode.class);
+        for(JsonNode result : results) {
+            //System.out.println(result.toString());
+            list.add(result.get("_id").getTextValue());
+        }
+        return list;
+    }
+    /** This method is called from within the constructor to
+     * initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is
+     * always regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        buttonGroup1 = new javax.swing.ButtonGroup();
+        jLabel1 = new javax.swing.JLabel();
+        siteAddressTextField = new javax.swing.JTextField();
+        siteIconLabel = new javax.swing.JLabel();
+        topicComboBox = new javax.swing.JComboBox();
+        addLinkRadioButton = new javax.swing.JRadioButton();
+        newTopicRadioButton = new javax.swing.JRadioButton();
+        newTopicTextField = new javax.swing.JTextField();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        topicTextArea = new javax.swing.JTextArea();
+        jLabel4 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        cancelButton = new javax.swing.JButton();
+        okButton = new javax.swing.JButton();
+        jLabel2 = new javax.swing.JLabel();
+        descTextField = new javax.swing.JTextField();
+        jLabel3 = new javax.swing.JLabel();
+        spaceComboBox = new javax.swing.JComboBox();
+
+        setForeground(javax.swing.UIManager.getDefaults().getColor("Panel.background"));
+
+        jLabel1.setText("Link");
+
+        siteAddressTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                siteAddressTextFieldActionPerformed(evt);
+            }
+        });
+
+        topicComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+
+        buttonGroup1.add(addLinkRadioButton);
+        addLinkRadioButton.setSelected(true);
+        addLinkRadioButton.setText("Add Link to Existing Topic");
+        addLinkRadioButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addLinkRadioButtonActionPerformed(evt);
+            }
+        });
+
+        buttonGroup1.add(newTopicRadioButton);
+        newTopicRadioButton.setText("Add Link to New Topic");
+        newTopicRadioButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                newTopicRadioButtonActionPerformed(evt);
+            }
+        });
+
+        newTopicTextField.setEditable(false);
+
+        topicTextArea.setBackground(javax.swing.UIManager.getDefaults().getColor("Panel.background"));
+        topicTextArea.setColumns(20);
+        topicTextArea.setEditable(false);
+        topicTextArea.setRows(5);
+        topicTextArea.setEnabled(false);
+        jScrollPane1.setViewportView(topicTextArea);
+
+        jLabel4.setText("Topic");
+        jLabel4.setEnabled(false);
+
+        jLabel5.setText("Notes");
+        jLabel5.setEnabled(false);
+
+        cancelButton.setText("Cancel");
+        cancelButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cancelButtonActionPerformed(evt);
+            }
+        });
+
+        okButton.setText("OK");
+        okButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                okButtonActionPerformed(evt);
+            }
+        });
+
+        jLabel2.setText("Desc.");
+
+        descTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                descTextFieldActionPerformed(evt);
+            }
+        });
+
+        jLabel3.setText("Space");
+
+        spaceComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        spaceComboBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                spaceComboBoxActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        this.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(129, 129, 129)
+                        .addComponent(siteIconLabel))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(newTopicRadioButton)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel4)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(newTopicTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 348, Short.MAX_VALUE))
+                            .addComponent(addLinkRadioButton)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(17, 17, 17)
+                                .addComponent(topicComboBox, 0, 360, Short.MAX_VALUE))))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jLabel1))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(12, 12, 12)
+                                .addComponent(jLabel2)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(descTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 344, Short.MAX_VALUE)
+                            .addComponent(siteAddressTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 344, Short.MAX_VALUE))))
+                .addGap(10, 10, 10))
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel5)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(10, 10, 10)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 367, Short.MAX_VALUE)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addComponent(cancelButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(okButton, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                .addContainerGap())
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel3)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(spaceComboBox, 0, 344, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(siteIconLabel)
+                .addGap(10, 10, 10)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(siteAddressTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(descTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(spaceComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(15, 15, 15)
+                .addComponent(addLinkRadioButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(topicComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(newTopicRadioButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel4)
+                    .addComponent(newTopicTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel5)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(okButton)
+                    .addComponent(cancelButton))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void siteAddressTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_siteAddressTextFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_siteAddressTextFieldActionPerformed
+
+    private void addLinkRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addLinkRadioButtonActionPerformed
+        topicComboBox.setEnabled(true);
+
+        newTopicTextField.setEnabled(false);
+        newTopicTextField.setEditable(false);
+        topicTextArea.setEnabled(false);
+        topicTextArea.setEditable(false);
+        topicTextArea.setBackground(javax.swing.UIManager.getDefaults().getColor("Panel.background"));
+
+    }//GEN-LAST:event_addLinkRadioButtonActionPerformed
+
+    private void newTopicRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_newTopicRadioButtonActionPerformed
+        topicComboBox.setEnabled(false);
+
+        newTopicTextField.setEnabled(true);
+        newTopicTextField.setEditable(true);
+        topicTextArea.setEnabled(true);
+        topicTextArea.setEditable(true);
+        topicTextArea.setBackground(javax.swing.UIManager.getDefaults().getColor("TextArea.background"));
+    }//GEN-LAST:event_newTopicRadioButtonActionPerformed
+
+    private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
+        if (addLinkRadioButton.isSelected()) {
+            String topic = (String)topicComboBox.getModel().getSelectedItem();
+            JsonNode node = wikiConnector.get(JsonNode.class, topic);
+
+            ObjectNode onode = (ObjectNode) node;
+
+            DateTime now = new DateTime();
+            onode.put("-lastmodified", now.toString());
+            ArrayNode externalLinks = (ArrayNode)onode.get("-externalLinks");
+            if (externalLinks == null) {
+                externalLinks = onode.putArray("-externalLinks");
+            }
+            ObjectNode link = externalLinks.addObject();
+            link.put("name", descTextField.getText());
+            link.put("url", siteAddressTextField.getText());
+            link.put("timestamp", System.currentTimeMillis());
+            wikiConnector.update(node);
+            container.setVisible(false);
+            lastTopicID = topic;
+        }
+        if (newTopicRadioButton.isSelected()) {
+            String topic = Slugger.generateSlug(newTopicTextField.getText());
+
+            Map<String,Object> doc = new HashMap<String, Object>();
+            doc.put("_id", topic);
+            String wiki = topicTextArea.getText();
+            if (StringUtils.isNotEmpty(wiki)) {
+                doc.put("-wiki", wiki);
+            }
+            DateTime now = new DateTime();
+            doc.put("-lastmodified", now.toString());
+            List<Map> externalLinks = new ArrayList<Map>();
+            doc.put("-externalLinks",externalLinks);
+            Map<String,Object> link = new HashMap<String, Object>();
+            externalLinks.add(link);
+            link.put("name", descTextField.getText());
+            link.put("url", siteAddressTextField.getText());
+            link.put("timestamp", System.currentTimeMillis());
+            wikiConnector.create(doc);
+            container.setVisible(false);
+            lastTopicID = topic;
+
+
+        }
+    }//GEN-LAST:event_okButtonActionPerformed
+
+    private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
+        container.setVisible(false);
+    }//GEN-LAST:event_cancelButtonActionPerformed
+
+    private void descTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_descTextFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_descTextFieldActionPerformed
+
+    private void spaceComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_spaceComboBoxActionPerformed
+        // TODO add your handling code here:
+        
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                String space = (String)spaceComboBox.getSelectedItem();
+                wikiConnector = new StdCouchDbConnector(space, dbInstance);
+                topicComboBox.setEnabled(false);
+                List<String> topics = getTopics();
+                setTopicsAvailable(topics);
+                topicComboBox.setEnabled(true);
+                lastSpaceID = space;
+                if (lastTopicID != null) {
+                    topicComboBox.setSelectedItem(lastTopicID);
+                }
+            }
+        });
+        
+
+    }//GEN-LAST:event_spaceComboBoxActionPerformed
+
+
+    protected void setContainer(JDialog container) {
+        this.container = container;
+    }
+
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JRadioButton addLinkRadioButton;
+    private javax.swing.ButtonGroup buttonGroup1;
+    private javax.swing.JButton cancelButton;
+    private javax.swing.JTextField descTextField;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JRadioButton newTopicRadioButton;
+    private javax.swing.JTextField newTopicTextField;
+    private javax.swing.JButton okButton;
+    private javax.swing.JTextField siteAddressTextField;
+    private javax.swing.JLabel siteIconLabel;
+    private javax.swing.JComboBox spaceComboBox;
+    private javax.swing.JComboBox topicComboBox;
+    private javax.swing.JTextArea topicTextArea;
+    // End of variables declaration//GEN-END:variables
+
+}
