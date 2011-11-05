@@ -5,21 +5,14 @@
 
 package com.googlecode.eckoit.module.liferecorder;
 
-import com.googlecode.eckoit.module.liferecorder.FFMpegRecordingTasks;
-import com.googlecode.eckoit.module.liferecorder.RecordingWithInterval;
-import com.googlecode.eckoit.module.liferecorder.TaskException;
-import com.googlecode.eckoit.module.liferecorder.SansaClipLiferecorder;
-import com.googlecode.eckoit.audio.FFMpegSplitter;
+
+
 import org.joda.time.Instant;
 import java.util.ArrayList;
 import java.io.File;
 import java.util.List;
 import org.joda.time.Interval;
 import org.joda.time.LocalDateTime;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -134,28 +127,6 @@ public class SansaClipLiferecorderTest {
 
     }
 
-    @Ignore
-    @Test
-    public void testFolderParse() throws TaskException {
-        File folder = new File("C:\\Users\\ryan\\.mind-listening\\recordings\\in_progress\\1288477731156");
-        SansaClipLiferecorder instance = new SansaClipLiferecorder();
-
-        // fix this. this prop may be set later
-        FFMpegSplitter splitter = new FFMpegSplitter("C:\\Program Files\\Participatory Culture Foundation\\Miro Video Converter\\ffmpeg-bin\\ffmpeg.exe");
-        FFMpegRecordingTasks recordingTasks = new FFMpegRecordingTasks(splitter);
-        MockRecordingTask mrt = new MockRecordingTask();
-
-        instance.setRecordingTasks(recordingTasks);
-        instance.setSecondsAfterMark(10000);
-        instance.setSecondsBeforeMark(20000);
-        instance.setSplitMillisecondTollerance(2000);
-
-        List<RecordingWithInterval> recordings = instance.findRecordings(folder);
-        List<Instant> marks = instance.findMarks(recordings);
-        System.out.println("marks: " + marks.size());
-
-        instance.sliceUp(recordings, marks);
-
-    }
+ 
 
 }

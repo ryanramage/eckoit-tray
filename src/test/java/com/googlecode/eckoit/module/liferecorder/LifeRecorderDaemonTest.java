@@ -5,7 +5,7 @@
 
 package com.googlecode.eckoit.module.liferecorder;
 
-import com.github.couchapptakeout.ExitApplicationMessage;
+import com.github.couchapptakeout.events.ExitApplicationMessage;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;

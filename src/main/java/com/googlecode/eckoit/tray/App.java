@@ -1,27 +1,13 @@
 package com.googlecode.eckoit.tray;
 
-import com.github.couchapptakeout.AddMenuItemEvent;
-import com.github.couchapptakeout.ShowApplicationUrlMessage;
+import com.github.couchapptakeout.events.AddMenuItemEvent;
 import com.googlecode.eckoit.PropertiesPropertiesStorage;
 import com.googlecode.eckoit.PropertiesStorage;
-import com.googlecode.eckoit.audio.ContinousAudioConvereter;
-import com.googlecode.eckoit.audio.FFMpegSplitter;
-import com.googlecode.eckoit.audio.RecordingFinishedHelper;
-import com.googlecode.eckoit.audio.RecordingFinishedManager;
-import com.googlecode.eckoit.audio.SplitAudioRecorder;
 import com.googlecode.eckoit.bookmarkHelper.BookmarkDropTargetWindow;
-import com.googlecode.eckoit.diarization.Diarizer;
-import com.googlecode.eckoit.events.LifeRecorderAttachedEvent;
-import com.googlecode.eckoit.events.MeetingFinalProcessingEvent;
-import com.googlecode.eckoit.events.ShowDashboardMessage;
-import com.googlecode.eckoit.module.liferecorder.FFMpegRecordingTasks;
 import com.googlecode.eckoit.module.liferecorder.LifeRecorderManager;
 import com.googlecode.eckoit.module.liferecorder.SansaClipLiferecorder;
-import com.googlecode.eckoit.module.liferecorder.UploadDirDialog;
 import com.googlecode.eckoit.module.liferecorder.Uploader;
-import com.googlecode.eckoit.replication.ReplicationManager;
-import com.googlecode.eckoit.screengrab.ScreenGrabber;
-import com.googlecode.eckoit.util.FFMpegLocator;
+
 import java.awt.Desktop;
 import java.awt.MenuItem;
 import java.awt.event.ActionEvent;
@@ -32,8 +18,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,7 +28,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.bushe.swing.event.EventBus;
 import org.bushe.swing.event.EventServiceLocator;
-import org.bushe.swing.event.EventSubscriber;
 import org.bushe.swing.event.ThreadSafeEventService;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.CouchDbInstance;
@@ -71,21 +54,18 @@ public class App  {
     private CouchDbConnector wikiConnector;
     private CouchDbInstance dbInstance;
     private HttpClient couchHttpClient;
-    private Diarizer diarizer;
-    RecordingFinishedManager manager;
     private BookmarkDropTargetWindow bdtw;
 
 
     private Messages messages;
 
-    private ScreenGrabber screenGrabber;
     private LiferecorderSyncDialog lrsd;
     private MeetingUploadDialog mud;
 
 
     public App() {
         System.setProperty(EventServiceLocator.SERVICE_NAME_EVENT_BUS, ThreadSafeEventService.class.getName());
-        messages = loadMessages();
+
     }
 
 
@@ -103,49 +83,7 @@ public class App  {
         Logger.getLogger(App.class.getName()).log(Level.INFO, "Loading Property Storage");
         loadPropertyStorage();
         setupLogging();
-        EventBus.subscribeStrongly(ShowDashboardMessage.class, new EventSubscriber<ShowDashboardMessage> () {
-            @Override
-            public void onEvent(ShowDashboardMessage t) {
-                EventBus.publish(new ShowApplicationUrlMessage("/_design/app/dashboard.html"));
-            }
-        });
 
-        EventBus.subscribeStrongly(LifeRecorderAttachedEvent.class, new EventSubscriber<LifeRecorderAttachedEvent> () {
-            @Override
-            public void onEvent(LifeRecorderAttachedEvent t) {
-                // show in new thread?
-                SwingUtilities.invokeLater(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        if (lrsd == null) {
-                            lrsd = new LiferecorderSyncDialog(null, false);
-                        }
-                        lrsd.setAlwaysOnTop(true);
-                        lrsd.setSize(300, 150);
-                        lrsd.setVisible(true);
-                    }
-                });
-            }
-        });
-        EventBus.subscribeStrongly(MeetingFinalProcessingEvent.class, new EventSubscriber<MeetingFinalProcessingEvent> () {
-            @Override
-            public void onEvent(MeetingFinalProcessingEvent t) {
-                if (t.getStatus() != MeetingFinalProcessingEvent.STARTED) return;
-                // show in new thread?
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (mud == null) {
-                            mud = new MeetingUploadDialog(null, false);
-                        }
-                        mud.setAlwaysOnTop(true);
-                        mud.setSize(300, 150);
-                        mud.setVisible(true);
-                    }
-                });
-            }
-        });
 
 
         Logger.getLogger(App.class.getName()).log(Level.INFO, "Start Liferecorder Manager");
@@ -157,22 +95,14 @@ public class App  {
         Logger.getLogger(App.class.getName()).log(Level.INFO, "App loading finished");
 
         EventBus.publish(new AddMenuItemEvent(createBookmarkMenuItem()));
-        EventBus.publish(new AddMenuItemEvent(createUploadMenuItem()));
+      
 
 
     }
 
 
 
-    protected Messages loadMessages() {
-        ResourceBundle bundle = null;
-        try {
-            bundle = ResourceBundle.getBundle("messages");
-        } catch (Exception e) {
-            bundle = ResourceBundle.getBundle("messages", Locale.ENGLISH);
-        }
-        return new Messages(bundle);
-    }
+ 
 
 
 
@@ -234,23 +164,6 @@ public class App  {
 
 
 
-    protected MenuItem createUploadMenuItem() {
-        MenuItem item = new MenuItem("Upload Audio");
-        item.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                    UploadDirDialog dialog = new UploadDirDialog(null, true);
-                        dialog.setWikiConnector(wikiConnector);
-                        dialog.setLocationRelativeTo(null);
-                        dialog.setVisible(true);
-                    }
-                });
-            }
-        });
-        return item;
-    }
 
 
 
@@ -272,16 +185,16 @@ public class App  {
 
         SansaClipLiferecorder scl = new SansaClipLiferecorder();
         // fix this. this prop may be set later
-        FFMpegSplitter splitter = new FFMpegSplitter(p_storage.loadProperty("ffmpegcmd"));
-        FFMpegRecordingTasks recordingTasks = new FFMpegRecordingTasks(splitter);
-        scl.setRecordingTasks(recordingTasks);
-        scl.setSecondsAfterMark(20000);
-        scl.setSecondsBeforeMark(10000);
-        scl.setSplitMillisecondTollerance(2000);
+//        FFMpegSplitter splitter = new FFMpegSplitter(p_storage.loadProperty("ffmpegcmd"));
+//        FFMpegRecordingTasks recordingTasks = new FFMpegRecordingTasks(splitter);
+//        scl.setRecordingTasks(recordingTasks);
+//        scl.setSecondsAfterMark(20000);
+//        scl.setSecondsBeforeMark(10000);
+//        scl.setSplitMillisecondTollerance(2000);
 
         Uploader uploader = new Uploader(wikiConnector);
 
-        LifeRecorderManager lrm = new LifeRecorderManager(scl, recordingInProgressDir, uploader, wikiConnector, couchHttpClient, messages, roots);
+        LifeRecorderManager lrm = new LifeRecorderManager(scl, recordingInProgressDir, uploader, wikiConnector, messages, roots);
         lrm.start();
     }
 
@@ -305,16 +218,6 @@ public class App  {
             }
         }
         
-    }
-
-    protected void findFFMpeg() {
-        // if not set, find ffmpeg
-        String ffmpegCmd = p_storage.loadProperty("ffmpegcmd");
-        if (true) {
-            Logger.getLogger(App.class.getName()).log(Level.INFO, "Starting FFmpeg locator");
-            FFMpegLocator locator = new FFMpegLocator(p_storage);
-            new Thread(locator).start();
-        }
     }
 
 
@@ -355,22 +258,6 @@ public class App  {
         }
     }
 
-    protected void initRecordingComponents() {
-        String splitTime = p_storage.loadProperty("splitTime");
-        if (StringUtils.isNotBlank(splitTime)) {
-            try {
-                SplitAudioRecorder.setSplitTime(Long.parseLong(splitTime));
-            } catch (Exception e) {}
-        }
-
-        ContinousAudioConvereter cac = new ContinousAudioConvereter(p_storage, recordingInProgressDir, recordingCompleteDir);
-        cac.start();
-
-        RecordingFinishedHelper helper = new RecordingFinishedHelper(recordingInProgressDir, recordingCompleteDir);
-        manager = new RecordingFinishedManager(dbInstance, helper);
-
-        diarizer = new Diarizer(manager);
-    }
 
 
     private void setupLogging() {

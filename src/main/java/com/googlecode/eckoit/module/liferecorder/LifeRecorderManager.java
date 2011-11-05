@@ -5,8 +5,7 @@
 
 package com.googlecode.eckoit.module.liferecorder;
 
-import com.github.couchapptakeout.TrayMessage;
-import com.googlecode.eckoit.Slugger;
+import com.github.couchapptakeout.events.TrayMessage;
 import com.googlecode.eckoit.events.LifeRecorderAttachedEvent;
 import com.googlecode.eckoit.events.LifeRecorderDetachedEvent;
 import com.googlecode.eckoit.events.LiferecorderSyncProcessMessage;
@@ -14,33 +13,15 @@ import com.googlecode.eckoit.events.ShowDashboardMessage;
 import com.googlecode.eckoit.tray.Messages;
 import java.awt.TrayIcon.MessageType;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.bushe.swing.event.EventBus;
 import org.bushe.swing.event.EventSubscriber;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.JsonNodeFactory;
-import org.codehaus.jackson.node.ObjectNode;
-import org.ektorp.AttachmentInputStream;
 import org.ektorp.CouchDbConnector;
-import org.ektorp.DocumentOperationResult;
-import org.ektorp.Revision;
-import org.ektorp.http.HttpClient;
-import org.ektorp.http.RestTemplate;
-import org.joda.time.Instant;
-import org.joda.time.Interval;
 
 /**
  *
@@ -54,18 +35,16 @@ public class LifeRecorderManager {
     LifeRecorderDaemon daemon;
     Uploader uploader;
     CouchDbConnector wikiConnector;
-    HttpClient couchHttpClient;
     Recorder recorder;
     final Messages messages;
     boolean isAttached = false;
 
-    public LifeRecorderManager(Recorder recorder, File recordingDirectory, Uploader uploader, CouchDbConnector wikiConnector, HttpClient couchHttpClient, final Messages messages, List<String> roots) {
+    public LifeRecorderManager(Recorder recorder, File recordingDirectory, Uploader uploader, CouchDbConnector wikiConnector,  final Messages messages, List<String> roots) {
         this.messages = messages;
         this.recorder = recorder;
         this.recordingDirectory = recordingDirectory;
         this.uploader = uploader;
         this.wikiConnector = wikiConnector;
-        this.couchHttpClient = couchHttpClient;
         daemon = new LifeRecorderDaemon(roots, LIFE_RECORDER_SETTINGS, checkIntervalMilliSeconds);
         EventBus.subscribeStrongly(LifeRecorderAttachedEvent.class, new EventSubscriber<LifeRecorderAttachedEvent>() {
             @Override
@@ -177,27 +156,7 @@ public class LifeRecorderManager {
      }
 
 
-    protected void syncDocsToFiles(File root) {
-        Logger.getLogger(LifeRecorderManager.class.getName()).log(Level.INFO, "Sync topics to life recorder started.");
-        File docDir = getDocDir(root);
-        List<String> ids = wikiConnector.getAllDocIds();
-        for (String id : ids) {
-            try {
-                String f_id = Slugger.generateSlug(id);
-                File docFile = new File(docDir, f_id + ".txt");
-                docFile.createNewFile();
-                FileOutputStream out = new FileOutputStream(docFile);
-                RestTemplate t = new RestTemplate(couchHttpClient);
-                InputStream is = t.get("/wikid/_design/text/_show/full/" + id).getContent();
-                IOUtils.copy(is, out);
-                out.close();
-            } catch (Exception ex) {
-                Logger.getLogger(LifeRecorderManager.class.getName()).log(Level.SEVERE, null, ex);
-            }
 
-        }
-        Logger.getLogger(LifeRecorderManager.class.getName()).log(Level.INFO, "Sync topics to life recorder complete.");
-    }
 
 
     private File getDocDir(File root) {
