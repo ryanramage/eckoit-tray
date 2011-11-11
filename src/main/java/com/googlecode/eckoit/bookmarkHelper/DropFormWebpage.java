@@ -44,7 +44,6 @@ public class DropFormWebpage extends javax.swing.JPanel {
 
     BookmarkDropTargetWindow window;
     JDialog container;
-    private CouchDbInstance dbInstance;
     private List<String> spaces;
     private String lastTopicID;
     private String lastSpaceID;
@@ -55,23 +54,14 @@ public class DropFormWebpage extends javax.swing.JPanel {
         initComponents();
     }
 
-    public void setSpaces(List<String> spaces) {
-        this.spaces = spaces;
-        Vector<String> spaceVector = new Vector<String>(spaces);
-        spaceComboBox.setModel(new javax.swing.DefaultComboBoxModel(spaceVector));
-        if (lastSpaceID == null) {
-            lastSpaceID = (String)spaceComboBox.getItemAt(0);
-        }
-        spaceComboBox.setSelectedItem(lastSpaceID);
-        spaceComboBoxActionPerformed(null);
-    }
+
 
     public void setBookmarkDropTargetWindow(BookmarkDropTargetWindow window) {
         this.window = window;
     }
 
-    public void setDBInstance(  CouchDbInstance dbInstance) {
-        this.dbInstance = dbInstance;
+    public void setConnector(  CouchDbConnector wikiConnector) {
+        this.wikiConnector = wikiConnector;
     }
 
     protected JTextField getDescriptionField() {
@@ -96,7 +86,6 @@ public class DropFormWebpage extends javax.swing.JPanel {
                 topicTextArea.setText("");
                 if (lastTopicID != null) {
                     addLinkRadioButtonActionPerformed(null);
-                    spaceComboBoxActionPerformed(null);
                     addLinkRadioButton.setSelected(true);
                     
                     descTextField.requestFocus();
@@ -172,8 +161,6 @@ public class DropFormWebpage extends javax.swing.JPanel {
         okButton = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
         descTextField = new javax.swing.JTextField();
-        jLabel3 = new javax.swing.JLabel();
-        spaceComboBox = new javax.swing.JComboBox();
 
         setForeground(javax.swing.UIManager.getDefaults().getColor("Panel.background"));
 
@@ -241,15 +228,6 @@ public class DropFormWebpage extends javax.swing.JPanel {
             }
         });
 
-        jLabel3.setText("Space");
-
-        spaceComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        spaceComboBox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                spaceComboBoxActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -270,7 +248,7 @@ public class DropFormWebpage extends javax.swing.JPanel {
                             .addComponent(addLinkRadioButton)
                             .addGroup(layout.createSequentialGroup()
                                 .addGap(17, 17, 17)
-                                .addComponent(topicComboBox, 0, 360, Short.MAX_VALUE))))
+                                .addComponent(topicComboBox, 0, 376, Short.MAX_VALUE))))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
@@ -281,8 +259,8 @@ public class DropFormWebpage extends javax.swing.JPanel {
                                 .addComponent(jLabel2)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(descTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 344, Short.MAX_VALUE)
-                            .addComponent(siteAddressTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 344, Short.MAX_VALUE))))
+                            .addComponent(descTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 356, Short.MAX_VALUE)
+                            .addComponent(siteAddressTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 356, Short.MAX_VALUE))))
                 .addGap(10, 10, 10))
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
@@ -291,17 +269,11 @@ public class DropFormWebpage extends javax.swing.JPanel {
                     .addGroup(layout.createSequentialGroup()
                         .addGap(10, 10, 10)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 367, Short.MAX_VALUE)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 373, Short.MAX_VALUE)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                 .addComponent(cancelButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(okButton, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                .addContainerGap())
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel3)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(spaceComboBox, 0, 344, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -317,11 +289,7 @@ public class DropFormWebpage extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(descTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
-                    .addComponent(spaceComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(15, 15, 15)
+                .addGap(39, 39, 39)
                 .addComponent(addLinkRadioButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(topicComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -339,7 +307,7 @@ public class DropFormWebpage extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(okButton)
                     .addComponent(cancelButton))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(28, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -423,27 +391,6 @@ public class DropFormWebpage extends javax.swing.JPanel {
         // TODO add your handling code here:
     }//GEN-LAST:event_descTextFieldActionPerformed
 
-    private void spaceComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_spaceComboBoxActionPerformed
-        // TODO add your handling code here:
-        
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                String space = (String)spaceComboBox.getSelectedItem();
-                wikiConnector = new StdCouchDbConnector(space, dbInstance);
-                topicComboBox.setEnabled(false);
-                List<String> topics = getTopics();
-                setTopicsAvailable(topics);
-                topicComboBox.setEnabled(true);
-                lastSpaceID = space;
-                if (lastTopicID != null) {
-                    topicComboBox.setSelectedItem(lastTopicID);
-                }
-            }
-        });
-        
-
-    }//GEN-LAST:event_spaceComboBoxActionPerformed
-
 
     protected void setContainer(JDialog container) {
         this.container = container;
@@ -457,7 +404,6 @@ public class DropFormWebpage extends javax.swing.JPanel {
     private javax.swing.JTextField descTextField;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JScrollPane jScrollPane1;
@@ -466,7 +412,6 @@ public class DropFormWebpage extends javax.swing.JPanel {
     private javax.swing.JButton okButton;
     private javax.swing.JTextField siteAddressTextField;
     private javax.swing.JLabel siteIconLabel;
-    private javax.swing.JComboBox spaceComboBox;
     private javax.swing.JComboBox topicComboBox;
     private javax.swing.JTextArea topicTextArea;
     // End of variables declaration//GEN-END:variables

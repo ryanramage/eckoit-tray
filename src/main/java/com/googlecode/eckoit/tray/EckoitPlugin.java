@@ -155,7 +155,7 @@ public class EckoitPlugin implements Plugin{
 
                         if (bdtw == null) {
                             List<String> spaces = Arrays.asList(db.getDatabaseName());
-                            bdtw = new BookmarkDropTargetWindow(x, y, spaces, instance);
+                            bdtw = new BookmarkDropTargetWindow(x, y, db);
                         }
                         if (bdtw.isVisible()) {
                             bdtw.setVisible(false);

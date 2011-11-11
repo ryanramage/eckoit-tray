@@ -1,15 +1,22 @@
 package com.googlecode.eckoit.tray;
 
 import com.github.couchapptakeout.events.AddMenuItemEvent;
+import com.github.couchapptakeout.events.ExitApplicationMessage;
+import com.github.couchapptakeout.events.TrayMessage;
 import com.googlecode.eckoit.PropertiesPropertiesStorage;
 import com.googlecode.eckoit.PropertiesStorage;
 import com.googlecode.eckoit.bookmarkHelper.BookmarkDropTargetWindow;
 import com.googlecode.eckoit.module.liferecorder.LifeRecorderManager;
 import com.googlecode.eckoit.module.liferecorder.SansaClipLiferecorder;
 import com.googlecode.eckoit.module.liferecorder.Uploader;
+import java.awt.AWTException;
 
 import java.awt.Desktop;
+import java.awt.Image;
 import java.awt.MenuItem;
+import java.awt.PopupMenu;
+import java.awt.SystemTray;
+import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -22,12 +29,14 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.bushe.swing.event.EventBus;
 import org.bushe.swing.event.EventServiceLocator;
+import org.bushe.swing.event.EventSubscriber;
 import org.bushe.swing.event.ThreadSafeEventService;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.CouchDbInstance;
@@ -57,15 +66,19 @@ public class App  {
     private BookmarkDropTargetWindow bdtw;
 
 
+    private TrayIcon trayIcon;
+
+    Image trayImg;
+
+
+
     private Messages messages;
 
     private LiferecorderSyncDialog lrsd;
-    private MeetingUploadDialog mud;
 
 
     public App() {
         System.setProperty(EventServiceLocator.SERVICE_NAME_EVENT_BUS, ThreadSafeEventService.class.getName());
-
     }
 
 
@@ -74,151 +87,43 @@ public class App  {
      * @param db
      */
     public void start(CouchDbConnector db, CouchDbInstance instance) {
-        this.wikiConnector = db;
-        this.dbInstance = instance;
-        this.couchHttpClient = instance.getConnection();
+        
 
-        Logger.getLogger(App.class.getName()).log(Level.INFO, "Init Working Dir");
         initWorkingDirectory();
-        Logger.getLogger(App.class.getName()).log(Level.INFO, "Loading Property Storage");
-        loadPropertyStorage();
         setupLogging();
 
 
 
-        Logger.getLogger(App.class.getName()).log(Level.INFO, "Start Liferecorder Manager");
-        startLifeRecorderManager();
-        //Logger.getLogger(App.class.getName()).log(Level.INFO, "Init Recording Components");
-        //initRecordingComponents();
-        //Logger.getLogger(App.class.getName()).log(Level.INFO, "Start Clustering");
-        //clustering();
-        Logger.getLogger(App.class.getName()).log(Level.INFO, "App loading finished");
+        trayImg = createImage("/icon.png");
 
-        EventBus.publish(new AddMenuItemEvent(createBookmarkMenuItem()));
-      
-
-
-    }
-
-
-
- 
-
-
-
-
-
-    protected MenuItem createBookmarkMenuItem() {
-        MenuItem item = new MenuItem(messages.getLocalMessage(Messages.BOOKMARK_TOOL_MENU_ITEM));
-        item.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-
-                        int x = 600;
-                        int y;
-                        if (SystemUtils.IS_OS_WINDOWS) {
-                            y = 0;
-                        } else {
-                            y = 100;
-                        }
-
-                        String locationStr = p_storage.loadProperty("dropTargetLocation");
-                        if (StringUtils.isNotEmpty(locationStr)) {
-                            try {
-                                String[] locArr = locationStr.split(",");
-                                x = Integer.parseInt(locArr[0]);
-                                y = Integer.parseInt(locArr[1]);
-                            } catch (Exception e) {
-
-                            }
-                        }
-
-                        if (bdtw == null) {
-                            List<String> spaces = Arrays.asList(wikiConnector.getDatabaseName());
-                            bdtw = new BookmarkDropTargetWindow(x, y, spaces, dbInstance);
-                        }
-                        if (bdtw.isVisible()) {
-                            bdtw.setVisible(false);
-                        } else {
-                            bdtw.setVisible(true);
-                        }
-                        
-                    }
-                });
-            }
-        });
-        return item;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    private void startLifeRecorderManager() {
-        List<String> roots = new ArrayList<String>();
-        String recorderRoot = p_storage.loadProperty("lifeRecorderDirs");
-        if (StringUtils.isNotEmpty(recorderRoot)) {
-            roots = Arrays.asList(recorderRoot.split(","));
+        SystemTray tray = SystemTray.getSystemTray();
+        if (!SystemTray.isSupported()) {
+            throw new RuntimeException("Tray Not Supported");
         }
+        trayIcon = new TrayIcon(trayImg, "Eckoit");
+        final PopupMenu popup = createMenu();
 
-        SansaClipLiferecorder scl = new SansaClipLiferecorder();
-        // fix this. this prop may be set later
-//        FFMpegSplitter splitter = new FFMpegSplitter(p_storage.loadProperty("ffmpegcmd"));
-//        FFMpegRecordingTasks recordingTasks = new FFMpegRecordingTasks(splitter);
-//        scl.setRecordingTasks(recordingTasks);
-//        scl.setSecondsAfterMark(20000);
-//        scl.setSecondsBeforeMark(10000);
-//        scl.setSplitMillisecondTollerance(2000);
+        trayIcon.setPopupMenu(popup);
+        try {
+            tray.add(trayIcon);
+            //registerEvents();
+        } catch (AWTException e) {
 
-        Uploader uploader = new Uploader(wikiConnector);
-
-        LifeRecorderManager lrm = new LifeRecorderManager(scl, recordingInProgressDir, uploader, wikiConnector, messages, roots);
-        lrm.start();
-    }
-
-    protected void showUrl(URL dest) {
-
-
-        Desktop desktop = null;
-        // Before more Desktop API is used, first check
-        // whether the API is supported by this particular
-        // virtual machine (VM) on this particular host.
-        if (Desktop.isDesktopSupported()) {
-            Logger.getLogger(App.class.getName()).log(Level.INFO, "Getting Desktop");
-            desktop = Desktop.getDesktop();
-            try {
-                Logger.getLogger(App.class.getName()).log(Level.INFO, "Browse Command");
-                desktop.browse(dest.toURI());
-                Logger.getLogger(App.class.getName()).log(Level.INFO, "showURl Complete");
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(null,
-                "Exception: " + ex.getMessage());
-            }
         }
+        registerEvents();
         
+
+
+
+        EckoitPlugin plugin = new EckoitPlugin();
+        plugin.start(db, instance, homeDir);
+
+
+
+
     }
+
+
 
 
 
@@ -250,13 +155,7 @@ public class App  {
 
     }
 
-    protected void loadPropertyStorage() {
-        try {
-            p_storage = new PropertiesPropertiesStorage(homeDir);
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
+
 
 
 
@@ -276,10 +175,10 @@ public class App  {
 
     public static void main(String[] args) {
         String host = "localhost";
-        int port = 5984;
+        int port = 5983;
         String db = "life";
-        String username = null;
-        String password = null;
+        String username = "admin";
+        String password = "admin";
 
         if (args.length >= 1) {
             String[] hostport = parseUsernamePass(args[0]);
@@ -300,8 +199,8 @@ public class App  {
         }
 
         StdHttpClient.Builder builder= new StdHttpClient.Builder()
-                                    .host("localhost")
-                                    .port(5984);
+                                    .host(host)
+                                    .port(port);
         if (StringUtils.isNotBlank(username)) {
             builder.username(username);
             builder.password(password);
@@ -311,7 +210,9 @@ public class App  {
         HttpClient httpClient = builder.build();
 
         CouchDbInstance dbInstance = new StdCouchDbInstance(httpClient);
-        CouchDbConnector couch = new StdCouchDbConnector("mydatabase", dbInstance);
+        CouchDbConnector couch = new StdCouchDbConnector(db, dbInstance);
+        couch.createDatabaseIfNotExists();
+        
         new App().start(couch, dbInstance);
     }
 
@@ -319,4 +220,68 @@ public class App  {
         if (arg == null) return null;
         return arg.split(":");
     }
+
+
+    //Obtain the image URL
+    protected static Image createImage(String path) {
+        URL imageURL = App.class.getResource(path);
+
+        if (imageURL == null) {
+            System.err.println("Resource not found: " + path);
+            return null;
+        } else {
+            return (new ImageIcon(imageURL)).getImage();
+        }
+
+    }
+
+    private PopupMenu createMenu() {
+        final PopupMenu popup = new PopupMenu("Couch Audio Recorder");
+        {
+            MenuItem item = new MenuItem("Exit");
+            item.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    EventBus.publish(new ExitApplicationMessage());
+                    try {
+                        Thread.sleep(1000);
+                        System.exit(0);
+                    } catch (Exception ex) {
+                    }
+
+                }
+            });
+            popup.add(item);
+
+        }
+        return popup;
+    }
+
+
+    protected void registerEvents() {
+
+       EventBus.subscribeStrongly(TrayMessage.class, new EventSubscriber<TrayMessage>() {
+            @Override
+            public void onEvent(TrayMessage t) {
+                trayIcon.displayMessage(t.getTitle(), t.getMessage(), t.getType());
+            }
+        });
+
+        EventBus.subscribeStrongly(ExitApplicationMessage.class, new EventSubscriber<ExitApplicationMessage>() {
+            @Override
+            public void onEvent(ExitApplicationMessage t) {
+                SystemTray tray = SystemTray.getSystemTray();
+                tray.remove(trayIcon);
+            }
+        });
+        EventBus.subscribeStrongly(AddMenuItemEvent.class, new EventSubscriber<AddMenuItemEvent>() {
+            @Override
+            public void onEvent(AddMenuItemEvent t) {
+                trayIcon.getPopupMenu().add(t.getMenuItem());
+            }
+        });
+
+   }
+
+
 }

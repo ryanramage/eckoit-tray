@@ -28,7 +28,7 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
 import org.ektorp.AttachmentInputStream;
 import org.ektorp.CouchDbConnector;
-import org.ektorp.CouchDbInstance;
+
 import org.ektorp.Revision;
 import org.ektorp.ViewQuery;
 import org.ektorp.impl.StdCouchDbConnector;
@@ -43,7 +43,7 @@ public class DropFormFiles extends javax.swing.JPanel {
 
     BookmarkDropTargetWindow window;
     JDialog container;
-    private CouchDbInstance dbInstance;
+    private CouchDbConnector connector;
     private List<String> spaces;
     private String lastTopicID;
     private String lastSpaceID;
@@ -55,23 +55,14 @@ public class DropFormFiles extends javax.swing.JPanel {
         initComponents();
     }
 
-    public void setSpaces(List<String> spaces) {
-        this.spaces = spaces;
-        Vector<String> spaceVector = new Vector<String>(spaces);
-        spaceComboBox.setModel(new javax.swing.DefaultComboBoxModel(spaceVector));
-        if (lastSpaceID == null) {
-            lastSpaceID = (String)spaceComboBox.getItemAt(0);
-        }
-        spaceComboBox.setSelectedItem(lastSpaceID);
-        spaceComboBoxActionPerformed(null);
-    }
+
 
     public void setBookmarkDropTargetWindow(BookmarkDropTargetWindow window) {
         this.window = window;
     }
 
-    public void setDBInstance(  CouchDbInstance dbInstance) {
-        this.dbInstance = dbInstance;
+    public void setConnector(  CouchDbConnector connector) {
+        this.connector = connector;
     }
 
 
@@ -120,8 +111,6 @@ public class DropFormFiles extends javax.swing.JPanel {
         jLabel5 = new javax.swing.JLabel();
         cancelButton = new javax.swing.JButton();
         okButton = new javax.swing.JButton();
-        jLabel3 = new javax.swing.JLabel();
-        spaceComboBox = new javax.swing.JComboBox();
         numberOfFilesLabel = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
 
@@ -175,15 +164,6 @@ public class DropFormFiles extends javax.swing.JPanel {
             }
         });
 
-        jLabel3.setText("Space");
-
-        spaceComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        spaceComboBox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                spaceComboBoxActionPerformed(evt);
-            }
-        });
-
         numberOfFilesLabel.setText("1");
 
         jLabel2.setText("file(s) to add to the follow topic");
@@ -205,28 +185,35 @@ public class DropFormFiles extends javax.swing.JPanel {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(newTopicRadioButton)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel4)
+                        .addGap(29, 29, 29)
+                        .addComponent(topicComboBox, 0, 399, Short.MAX_VALUE))
+                    .addComponent(addLinkRadioButton))
+                .addContainerGap())
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(newTopicRadioButton)
+                .addContainerGap(270, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel4)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(newTopicTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 377, Short.MAX_VALUE)
+                .addContainerGap())
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel5)
+                .addContainerGap(405, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                        .addGap(30, 30, 30)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 412, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap(292, Short.MAX_VALUE)
+                        .addComponent(cancelButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(newTopicTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 348, Short.MAX_VALUE))
-                    .addComponent(addLinkRadioButton)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(17, 17, 17)
-                        .addComponent(topicComboBox, 0, 360, Short.MAX_VALUE))
-                    .addComponent(jLabel5)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(10, 10, 10)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 367, Short.MAX_VALUE)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addComponent(cancelButton)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(okButton, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(spaceComboBox, 0, 344, Short.MAX_VALUE)))
+                        .addComponent(okButton, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -239,10 +226,6 @@ public class DropFormFiles extends javax.swing.JPanel {
                         .addComponent(numberOfFilesLabel)
                         .addComponent(jLabel2)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
-                    .addComponent(spaceComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(15, 15, 15)
                 .addComponent(addLinkRadioButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(topicComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -250,17 +233,17 @@ public class DropFormFiles extends javax.swing.JPanel {
                 .addComponent(newTopicRadioButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel4)
-                    .addComponent(newTopicTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(newTopicTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel4))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel5)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 122, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(okButton)
                     .addComponent(cancelButton))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(23, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -347,27 +330,6 @@ public class DropFormFiles extends javax.swing.JPanel {
         container.setVisible(false);
     }//GEN-LAST:event_cancelButtonActionPerformed
 
-    private void spaceComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_spaceComboBoxActionPerformed
-        // TODO add your handling code here:
-        
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                String space = (String)spaceComboBox.getSelectedItem();
-                wikiConnector = new StdCouchDbConnector(space, dbInstance);
-                topicComboBox.setEnabled(false);
-                List<String> topics = getTopics();
-                setTopicsAvailable(topics);
-                topicComboBox.setEnabled(true);
-                lastSpaceID = space;
-                if (lastTopicID != null) {
-                    topicComboBox.setSelectedItem(lastTopicID);
-                }
-            }
-        });
-        
-
-    }//GEN-LAST:event_spaceComboBoxActionPerformed
-
     protected JButton getOkButton() {
         return okButton;
     }
@@ -382,7 +344,6 @@ public class DropFormFiles extends javax.swing.JPanel {
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JButton cancelButton;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JScrollPane jScrollPane1;
@@ -391,7 +352,6 @@ public class DropFormFiles extends javax.swing.JPanel {
     private javax.swing.JLabel numberOfFilesLabel;
     private javax.swing.JButton okButton;
     private javax.swing.JLabel siteIconLabel;
-    private javax.swing.JComboBox spaceComboBox;
     private javax.swing.JComboBox topicComboBox;
     private javax.swing.JTextArea topicTextArea;
     // End of variables declaration//GEN-END:variables

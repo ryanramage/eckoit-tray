@@ -59,7 +59,7 @@ public class BookmarkDropTargetWindow extends JWindow {
     JDialog webd ;
     JDialog filesd;
     
-    public BookmarkDropTargetWindow(int x, int y, List<String> spaces,  CouchDbInstance dbInstance) {
+    public BookmarkDropTargetWindow(int x, int y,   CouchDbConnector connector) {
         this.dbInstance = dbInstance;
         windowSizeAsIcon = new Dimension(16, 16);
         windowSizeExpanded = new Dimension(420, 480);
@@ -80,13 +80,12 @@ public class BookmarkDropTargetWindow extends JWindow {
         setAlwaysOnTop(true);
         webForm = new DropFormWebpage();
         webForm.setBookmarkDropTargetWindow(this);
-        webForm.setDBInstance(dbInstance);
-        webForm.setSpaces(spaces);
+        webForm.setConnector(connector);
+
 
         filesForm = new DropFormFiles();
         filesForm.setBookmarkDropTargetWindow(this);
-        filesForm.setDBInstance(dbInstance);
-        filesForm.setSpaces(spaces);
+        filesForm.setConnector(connector);
 
 
 
