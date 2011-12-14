@@ -72,6 +72,12 @@ public class Uploader {
         ObjectNode root = mapper.createObjectNode();
         root.put("liferecorder", true);
 
+
+        root.put("type", "com.eckoit.liferecorder.mark");
+        root.put("timestamp", mark.getStartMillis());
+
+
+
         ObjectNode markObj = mapper.createObjectNode();
         markObj.put("start", mark.getStartMillis());
         markObj.put("length", mark.toDurationMillis() / 1000);
