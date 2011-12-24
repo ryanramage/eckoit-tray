@@ -119,7 +119,7 @@ public class LifeRecorderDaemon implements Runnable, EventSubscriber<ExitApplica
     }
 
     protected boolean doesRootHaveLifeRecorderFile(File root) {
-        Logger.getLogger(LifeRecorderDaemon.class.getName()).log(Level.INFO, "Checkinh Root: " + root);
+       // Logger.getLogger(LifeRecorderDaemon.class.getName()).log(Level.INFO, "Checking Root: " + root);
         File settingsFile = new File(root, settingsFileName);
         if (!settingsFile.exists()) {
             return false;

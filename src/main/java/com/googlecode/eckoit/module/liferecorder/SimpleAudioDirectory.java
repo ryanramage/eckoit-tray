@@ -6,9 +6,12 @@
 package com.googlecode.eckoit.module.liferecorder;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -128,7 +131,7 @@ public class SimpleAudioDirectory implements Recorder{
 
         if (m.matches()) {
             int year = Integer.parseInt(m.group(1));
-            int month = Integer.parseInt(m.group(2));
+            int month = Integer.parseInt(m.group(2));       
             int day = Integer.parseInt(m.group(3));
             int hour = Integer.parseInt(m.group(4));
             int min = Integer.parseInt(m.group(5));
@@ -144,6 +147,19 @@ public class SimpleAudioDirectory implements Recorder{
     @Override
     public File getRecordingDir(File root) {
         return root;
+    }
+
+    @Override
+    public Map<String,String> getMD5s(List<RecordingWithInterval> recordings) {
+        Map<String,String> md5s = new HashMap<String,String>();
+        for (RecordingWithInterval recording : recordings) {
+            try {
+                md5s.put(recording.getFile().getName(), recording.getMD5());
+            } catch (IOException ex) {
+                Logger.getLogger(SimpleAudioDirectory.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return md5s;
     }
 
 }

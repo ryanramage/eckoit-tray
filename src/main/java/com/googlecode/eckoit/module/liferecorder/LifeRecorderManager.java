@@ -16,11 +16,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 import org.bushe.swing.event.EventBus;
 import org.bushe.swing.event.EventSubscriber;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.ektorp.CouchDbConnector;
 
 /**
@@ -103,7 +105,9 @@ public class LifeRecorderManager {
             doCopyDirectory(recordDir, toDir, true);
 
             Logger.getLogger(LifeRecorderManager.class.getName()).log(Level.INFO, "Uploading Liferecorded files to couch");
-            uploader.uploadFilesToCouch(toDir, recorder);
+            Map<String,String> md5s = uploader.uploadFilesToCouch(toDir, recorder);
+            saveMD5s(md5s, toDir);
+
 
             // remove all files from the source dir (this should be an option?)
             // also should verify md5 or something?
@@ -115,6 +119,12 @@ public class LifeRecorderManager {
         } catch (IOException ex) {
             Logger.getLogger(LifeRecorderManager.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    protected void saveMD5s(Map<String,String> md5s, File toDir) throws IOException {
+        File md5File = new File(toDir, "md5s.json");
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(toDir, md5File);
     }
 
 

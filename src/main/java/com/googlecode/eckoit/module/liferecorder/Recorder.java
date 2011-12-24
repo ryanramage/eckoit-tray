@@ -7,6 +7,7 @@ package com.googlecode.eckoit.module.liferecorder;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import org.joda.time.Instant;
 import org.joda.time.Interval;
 
@@ -21,6 +22,8 @@ public interface Recorder {
     List<Instant> findMarks(List<RecordingWithInterval> recordings);
 
     List<RecordingWithInterval> findRecordings(File root);
+
+    Map <String,String> getMD5s(List<RecordingWithInterval> recordings);
 
     File getRecordingDir(File root);
 

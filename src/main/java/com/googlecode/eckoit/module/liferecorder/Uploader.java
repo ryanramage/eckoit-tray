@@ -11,7 +11,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
@@ -41,18 +43,20 @@ public class Uploader {
         this.wikiConnector = wikiConnector;
     }
 
-    public void uploadFilesToCouch(File dir, Recorder recorder) {
+    public Map<String,String> uploadFilesToCouch(File dir, Recorder recorder) {
         List<RecordingWithInterval> recordings = recorder.findRecordings(dir);
         List<Instant> marks = recorder.findMarks(recordings);
         if (marks != null) {
             Logger.getLogger(Uploader.class.getName()).log(Level.INFO, "Uploading Final Recordings: " + marks.size());
         }
-        uploadFinalRecordings(recordings);
+        recorder.getMD5s(recordings);
+        Map<String,String> md5s = uploadFinalRecordings(recordings);
         List<Interval> markIntervals = recorder.findMarkInterval(marks);
         if (markIntervals != null) {
             Logger.getLogger(Uploader.class.getName()).log(Level.INFO, "Uploading Marks: " + markIntervals.size());
         }
         uploadMarks(markIntervals);
+        return md5s;
     }
 
     protected void uploadMarks(List<Interval>  marks) {
@@ -85,7 +89,8 @@ public class Uploader {
         return root;
     }
 
-    protected void uploadFinalRecordings(List<RecordingWithInterval> finalRecordings) {
+    protected Map<String,String> uploadFinalRecordings(List<RecordingWithInterval> finalRecordings) {
+        Map<String,String> finalMD5s = new HashMap<String, String>();
         List<JsonNode> bulkJsonFormat = translate(finalRecordings);
         List<DocumentOperationResult> uploadResults = wikiConnector.executeBulk(bulkJsonFormat);
         for(int i=0; i < finalRecordings.size(); i++) {
@@ -108,9 +113,16 @@ public class Uploader {
                 float percentComplete = ((i / finalRecordings.size()) / 2) + .5f;
                 EventBus.publish(new LiferecorderSyncProcessMessage("Uploading Locally: " + i + " of " + finalRecordings.size(), i, finalRecordings.size()));
 
+                // verify
+                String serverMD5 = findRecordingMD5(recording.getId());
+                assert serverMD5.equals(recording.getMD5());
+                
+                finalMD5s.put(recording.getFile().getName(), recording.getMD5());
+
+
                 // slow this down for a mac?
                 if (SystemUtils.IS_OS_MAC) {
-                    Thread.sleep(1000);
+                    Thread.sleep(500);
                 }
 
             } catch (Exception ex) {
@@ -120,7 +132,17 @@ public class Uploader {
 
 
         }
+        return finalMD5s;
     }
+
+
+    protected String findRecordingMD5(String docId) {
+        ObjectNode doc = wikiConnector.get( ObjectNode.class, docId);
+        JsonNode attach = doc.get("_attachments").getElements().next();
+        String serverMD5 = attach.get("digest").getTextValue();
+        return serverMD5.substring(4); // remove the 'md5-' prefix couch has
+    }
+
 
     protected List<JsonNode> translate(List<RecordingWithInterval> finalRecordings) {
         List<JsonNode> results = new ArrayList<JsonNode>();

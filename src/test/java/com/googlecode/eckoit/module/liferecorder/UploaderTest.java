@@ -5,6 +5,7 @@
 
 package com.googlecode.eckoit.module.liferecorder;
 
+import java.util.Map;
 import org.junit.Ignore;
 import com.googlecode.eckoit.module.liferecorder.Uploader;
 import com.googlecode.eckoit.module.liferecorder.SansaClipLiferecorder;
@@ -42,8 +43,8 @@ public class UploaderTest {
     public void testUploadFilesToCouch() {
         System.out.println("uploadFilesToCouch");
 
-        String host = "192.168.1.101";
-        int port = 80;
+        String host = "localhost";
+        int port = 5983;
 
         HttpClient couchHttpClient = new StdHttpClient.Builder()
                                     .host(host)
@@ -51,15 +52,15 @@ public class UploaderTest {
                                     .build();
 
         CouchDbInstance dbInstance = new StdCouchDbInstance(couchHttpClient);
-        CouchDbConnector wikiConnector = new StdCouchDbConnector("life", dbInstance);
+        CouchDbConnector wikiConnector = new StdCouchDbConnector("read", dbInstance);
 
         SansaClipLiferecorder scl = new SansaClipLiferecorder();
 
-        File homeDir = new File("C:\\rtemp\\audio");
+        File homeDir = new File("src/test/resources/audio/rockbox/");
 
         Uploader uploader = new Uploader(wikiConnector);
 
-        uploader.uploadFilesToCouch(homeDir, scl);
+        Map<String, String> md5s = uploader.uploadFilesToCouch(homeDir, scl);
 
 
     }

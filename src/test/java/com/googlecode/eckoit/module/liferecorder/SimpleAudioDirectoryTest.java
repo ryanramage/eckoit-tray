@@ -5,6 +5,7 @@
 
 package com.googlecode.eckoit.module.liferecorder;
 
+import java.util.Map;
 import java.util.List;
 import java.io.File;
 import org.joda.time.LocalDateTime;
@@ -83,6 +84,29 @@ public class SimpleAudioDirectoryTest {
         SimpleAudioDirectory sad = new SimpleAudioDirectory();
         int duration = sad.findOGGDuration(root);
         assertEquals(28, duration);
+    }
+
+
+
+    @Test
+    public void testMD5s() {
+        SimpleAudioDirectory sad = new SimpleAudioDirectory();
+        File root = new File("src/test/resources/audio/standard");
+
+        List<RecordingWithInterval> recordings = sad.findRecordings(root);
+
+        Map<String,String> md5s = sad.getMD5s(recordings);
+        assertEquals(1, md5s.size());
+
+        String filename = md5s.keySet().iterator().next();
+        assertEquals("2011-06-22-11-58-22.mp3", filename);
+
+        String md5 = md5s.get(filename);
+        assertEquals("ApFceNvHKY91UtJWSaxxJw==", md5);
+
+
+        System.out.println("MD5: " + md5);
+
     }
 
 }

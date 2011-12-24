@@ -7,10 +7,13 @@ package com.googlecode.eckoit.module.liferecorder;
 
 import com.googlecode.eckoit.events.LiferecorderSyncProcessMessage;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -343,6 +346,19 @@ public class SansaClipLiferecorder implements Recorder {
      */
     public void setSplitTimeTolerance(long splitTimeTolerance) {
         this.splitTimeTolerance = splitTimeTolerance;
+    }
+
+    @Override
+    public Map<String,String> getMD5s(List<RecordingWithInterval> recordings) {
+        Map<String,String> md5s = new HashMap<String,String>();
+        for (RecordingWithInterval recording : recordings) {
+            try {
+                md5s.put(recording.getFile().getName(),recording.getMD5());
+            } catch (IOException ex) {
+                Logger.getLogger(SimpleAudioDirectory.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return md5s;
     }
 
 

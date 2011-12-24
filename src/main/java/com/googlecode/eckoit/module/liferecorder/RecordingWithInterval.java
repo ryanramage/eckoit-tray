@@ -6,7 +6,11 @@
 package com.googlecode.eckoit.module.liferecorder;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.UUID;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.ektorp.util.Base64;
 import org.joda.time.Interval;
 
 /**
@@ -18,6 +22,7 @@ public class RecordingWithInterval {
     private String id;
     private File file;
     private Interval interval;
+    private String md5;
 
     public RecordingWithInterval() {
         id = UUID.randomUUID().toString();
@@ -58,6 +63,16 @@ public class RecordingWithInterval {
     public String getId() {
         return id;
     }
-    
+
+
+    public String getMD5() throws IOException {
+        if (md5 == null) {
+            byte[] bts = DigestUtils.md5(new FileInputStream(file));
+            md5 = Base64.encodeBytes(bts);
+        }
+        return md5;
+    }
+
+
 
 }
