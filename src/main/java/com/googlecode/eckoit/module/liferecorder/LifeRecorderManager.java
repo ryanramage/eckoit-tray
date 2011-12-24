@@ -22,6 +22,8 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 import org.bushe.swing.event.EventBus;
 import org.bushe.swing.event.EventSubscriber;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.ektorp.CouchDbConnector;
 
@@ -121,10 +123,14 @@ public class LifeRecorderManager {
         }
     }
 
-    protected void saveMD5s(Map<String,String> md5s, File toDir) throws IOException {
-        File md5File = new File(toDir, "md5s.json");
+    protected void saveMD5s(Map<String,String> md5s, File toDir)  {
+        File md5File = new File(toDir, "md5.json");
         ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(toDir, md5File);
+        try {
+            mapper.writeValue(md5File, md5s);
+        } catch (IOException ex) {
+            Logger.getLogger(LifeRecorderManager.class.getName()).log(Level.SEVERE, null, ex);
+        } 
     }
 
 

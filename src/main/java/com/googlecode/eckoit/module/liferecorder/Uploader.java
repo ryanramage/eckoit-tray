@@ -49,7 +49,7 @@ public class Uploader {
         if (marks != null) {
             Logger.getLogger(Uploader.class.getName()).log(Level.INFO, "Uploading Final Recordings: " + marks.size());
         }
-        recorder.getMD5s(recordings);
+        //recorder.getMD5s(recordings);
         Map<String,String> md5s = uploadFinalRecordings(recordings);
         List<Interval> markIntervals = recorder.findMarkInterval(marks);
         if (markIntervals != null) {
@@ -113,11 +113,10 @@ public class Uploader {
                 float percentComplete = ((i / finalRecordings.size()) / 2) + .5f;
                 EventBus.publish(new LiferecorderSyncProcessMessage("Uploading Locally: " + i + " of " + finalRecordings.size(), i, finalRecordings.size()));
 
-                // verify
                 String serverMD5 = findRecordingMD5(recording.getId());
-                assert serverMD5.equals(recording.getMD5());
+                //assert serverMD5.equals(recording.getMD5());
                 
-                finalMD5s.put(recording.getFile().getName(), recording.getMD5());
+                finalMD5s.put(recording.getFile().getName(), serverMD5);
 
 
                 // slow this down for a mac?
