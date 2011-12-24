@@ -26,6 +26,7 @@ import org.ektorp.AttachmentInputStream;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.DocumentOperationResult;
 import org.ektorp.Revision;
+import org.ektorp.ViewQuery;
 import org.joda.time.Instant;
 import org.joda.time.Interval;
 
@@ -51,11 +52,18 @@ public class Uploader {
         }
         //recorder.getMD5s(recordings);
         Map<String,String> md5s = uploadFinalRecordings(recordings);
+
+        EventBus.publish(new LiferecorderSyncProcessMessage("Finishing up. ", 50, 100));
+
+
         List<Interval> markIntervals = recorder.findMarkInterval(marks);
         if (markIntervals != null) {
             Logger.getLogger(Uploader.class.getName()).log(Level.INFO, "Uploading Marks: " + markIntervals.size());
         }
         uploadMarks(markIntervals);
+
+        EventBus.publish(new LiferecorderSyncProcessMessage("Finishing up. ", 80, 100));
+        warmViews();
         return md5s;
     }
 
@@ -163,5 +171,22 @@ public class Uploader {
         recording.put("length", recordingInterval.getInterval().toDurationMillis() / 1000);
         root.put("recording", recording);
         return root;
+    }
+
+    private void warmViews() {
+        warmView("_design/app");
+        warmView("_design/app2");
+    }
+
+    private void warmView(String ddocId) {
+        try {
+            ViewQuery query =
+                new ViewQuery()
+                .designDocId(ddocId)
+                .viewName("audio_by_time")
+                .limit(1);
+            wikiConnector.queryView(query);
+        } catch (Exception e) {}
+
     }
 }
